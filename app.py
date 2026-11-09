@@ -24,6 +24,7 @@ except:
     API_TOKEN = st.text_input("Mata in din Buzzsprout API-nyckel:", type="password")
 
 dagar_bakat = st.slider("Hur många dagar bakåt vill du titta?", min_value=7, max_value=90, value=30)
+trend_window = st.slider("Utjämning av trendkurva (dagar)", min_value=1, max_value=30, value=7)
 
 # --- Funktioner ---
 @st.cache_data(ttl=3600) # Cachas i 1 timme så du inte slår i API-taket i onödan
@@ -86,26 +87,25 @@ if API_TOKEN and st.button("Hämta statistik"):
         with tab1:
             df_smabruk = df[df["Podd"] == "Småbrukarpodden"]
             st.subheader("Totala nedladdningar per dag")
-            # Aggregera per dag och rita graf
-            daglig_trend = df_smabruk.groupby("Datum")["Nedladdningar"].sum().reset_index()
-            st.line_chart(daglig_trend.set_index("Datum"))
+            
+            # Aggregera per dag och rita graf med trend
+            daglig_trend1 = df_smabruk.groupby("Datum")["Nedladdningar"].sum().reset_index()
+            daglig_trend1.set_index("Datum", inplace=True)
+            daglig_trend1['Trend'] = daglig_trend1['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
+            st.line_chart(daglig_trend1[['Nedladdningar', 'Trend']])
+            
             st.dataframe(df_smabruk.sort_values("Datum", ascending=False), use_container_width=True)
             
         with tab2:
             df_surdeg = df[df["Podd"] == "Lilla Surdegspodden"]
             st.subheader("Totala nedladdningar per dag")
-            daglig_trend = df_surdeg.groupby("Datum")["Nedladdningar"].sum().reset_index()
-            # --- NYTT: Slider och Trendkurva ---
-# Låter dig välja hur många dagar trenden ska beräknas på
-trend_window = st.slider("Utjämning av trendkurva (dagar)", min_value=1, max_value=30, value=7)
-
-# Skapar en ny kolumn med det glidande medelvärdet
-# OBS: Byt ut 'Nedladdningar' om din datakolumn heter något annat, t.ex. 'Total' eller 'Downloads'
-df['Trend'] = df['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
-
-# Ritar ut både dagliga nedladdningar och trenden samtidigt
-st.line_chart(df[['Nedladdningar', 'Trend']])
-# -----------------------------------
+            
+            # Aggregera per dag och rita graf med trend
+            daglig_trend2 = df_surdeg.groupby("Datum")["Nedladdningar"].sum().reset_index()
+            daglig_trend2.set_index("Datum", inplace=True)
+            daglig_trend2['Trend'] = daglig_trend2['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
+            st.line_chart(daglig_trend2[['Nedladdningar', 'Trend']])
+            
             st.dataframe(df_surdeg.sort_values("Datum", ascending=False), use_container_width=True)
     else:
         st.warning("Ingen aktivitet hittades för vald period.")
