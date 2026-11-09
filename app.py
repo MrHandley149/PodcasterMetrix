@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import time
 
 # --- Konfiguration ---
-st.set_page_config(page_title="Podcaster Social Media Metrix", page_icon="📈", layout="centered")
+st.set_page_config(page_title="Podcaster Metrix", page_icon="📈", layout="centered")
 
 PODCASTS = {
     664657: "Småbrukarpodden",
@@ -13,22 +13,55 @@ PODCASTS = {
 }
 BASE_URL = "https://www.buzzsprout.com/api"
 
+# --- Språkhantering (Translations) ---
+TRANSLATIONS = {
+    "Svenska": {
+        "desc": "Dagsstatistik för Småbrukarpodden och Lilla Surdegspodden.",
+        "api_input": "Mata in din Buzzsprout API-nyckel:",
+        "days_slider": "Hur många dagar bakåt vill du titta?",
+        "trend_slider": "Utjämning av trendkurva (dagar)",
+        "btn_fetch": "Hämta statistik",
+        "fetching": "Hämtar data från Buzzsprout...",
+        "success": "Data hämtad!",
+        "no_data": "Ingen aktivitet hittades för vald period.",
+        "sub_daily": "Totala nedladdningar per dag",
+        "unknown": "Okänt"
+    },
+    "English": {
+        "desc": "Daily statistics for Småbrukarpodden and Lilla Surdegspodden.",
+        "api_input": "Enter your Buzzsprout API key:",
+        "days_slider": "How many days back do you want to look?",
+        "trend_slider": "Trend curve smoothing (days)",
+        "btn_fetch": "Fetch statistics",
+        "fetching": "Fetching data from Buzzsprout...",
+        "success": "Data fetched successfully!",
+        "no_data": "No activity found for the selected period.",
+        "sub_daily": "Total downloads per day",
+        "unknown": "Unknown"
+    }
+}
+
+# Sidofält för språkval
+st.sidebar.title("Inställningar / Settings")
+lang_choice = st.sidebar.radio("Språk / Language", ["Svenska", "English"])
+t = TRANSLATIONS[lang_choice] # Laddar vald ordlista
+
 # --- UI och Inloggning ---
-st.title("🎙️ Podcaster Social Media Metrix")
-st.write("Dagsstatistik för Småbrukarpodden och Lilla Surdegspodden.")
+st.title("🎙️ Podcaster Metrix")
+st.write(t["desc"])
 
 # Hämta API-nyckel från Streamlits inbyggda hemligheter (secrets)
 try:
     API_TOKEN = st.secrets["BUZZSPROUT_API_TOKEN"]
 except:
-    API_TOKEN = st.text_input("Mata in din Buzzsprout API-nyckel:", type="password")
+    API_TOKEN = st.text_input(t["api_input"], type="password")
 
-dagar_bakat = st.slider("Hur många dagar bakåt vill du titta?", min_value=7, max_value=90, value=30)
-trend_window = st.slider("Utjämning av trendkurva (dagar)", min_value=1, max_value=30, value=7)
+dagar_bakat = st.slider(t["days_slider"], min_value=7, max_value=90, value=30)
+trend_window = st.slider(t["trend_slider"], min_value=1, max_value=30, value=7)
 
 # --- Funktioner ---
-@st.cache_data(ttl=3600) # Cachas i 1 timme så du inte slår i API-taket i onödan
-def hamta_data(api_token, dagar):
+@st.cache_data(ttl=3600)
+def hamta_data(api_token, dagar, lang_unknown):
     headers = {
         "Authorization": f"Token token={api_token}",
         "User-Agent": "LilltorpMetricsWeb/1.0",
@@ -62,50 +95,53 @@ def hamta_data(api_token, dagar):
                     rader.append({
                         "Datum": pd.to_datetime(datum),
                         "Podd": pod_namn,
-                        "Avsnitt": avsnitt_karta.get(post.get('episode_id'), "Okänt"),
+                        "Avsnitt": avsnitt_karta.get(post.get('episode_id'), lang_unknown),
                         "Nedladdningar": post.get('total', 0)
                     })
             
             aktuellt_anrop += 1
             progress_bar.progress(aktuellt_anrop / total_anrop)
-            time.sleep(1.1) # Respektera Buzzsprouts 60 req/min
+            time.sleep(1.1) 
             
     progress_bar.empty()
     return pd.DataFrame(rader)
 
 # --- Exekvering och Grafer ---
-if API_TOKEN and st.button("Hämta statistik"):
-    with st.spinner("Hämtar data från Buzzsprout..."):
-        df = hamta_data(API_TOKEN, dagar_bakat)
+if API_TOKEN and st.button(t["btn_fetch"]):
+    with st.spinner(t["fetching"]):
+        # Skickar med 'Okänt'/'Unknown' till funktionen
+        df = hamta_data(API_TOKEN, dagar_bakat, t["unknown"])
         
     if not df.empty:
-        st.success("Data hämtad!")
+        st.success(t["success"])
         
         # Flikar för att skilja poddarna åt i mobilen
         tab1, tab2 = st.tabs(["Småbrukarpodden", "Lilla Surdegspodden"])
         
         with tab1:
             df_smabruk = df[df["Podd"] == "Småbrukarpodden"]
-            st.subheader("Totala nedladdningar per dag")
+            st.subheader(t["sub_daily"])
             
             # Aggregera per dag och rita graf med trend
             daglig_trend1 = df_smabruk.groupby("Datum")["Nedladdningar"].sum().reset_index()
-            daglig_trend1.set_index("Datum", inplace=True)
-            daglig_trend1['Trend'] = daglig_trend1['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
-            st.line_chart(daglig_trend1[['Nedladdningar', 'Trend']])
+            if not daglig_trend1.empty:
+                daglig_trend1.set_index("Datum", inplace=True)
+                daglig_trend1['Trend'] = daglig_trend1['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
+                st.line_chart(daglig_trend1[['Nedladdningar', 'Trend']])
             
             st.dataframe(df_smabruk.sort_values("Datum", ascending=False), use_container_width=True)
             
         with tab2:
             df_surdeg = df[df["Podd"] == "Lilla Surdegspodden"]
-            st.subheader("Totala nedladdningar per dag")
+            st.subheader(t["sub_daily"])
             
             # Aggregera per dag och rita graf med trend
             daglig_trend2 = df_surdeg.groupby("Datum")["Nedladdningar"].sum().reset_index()
-            daglig_trend2.set_index("Datum", inplace=True)
-            daglig_trend2['Trend'] = daglig_trend2['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
-            st.line_chart(daglig_trend2[['Nedladdningar', 'Trend']])
+            if not daglig_trend2.empty:
+                daglig_trend2.set_index("Datum", inplace=True)
+                daglig_trend2['Trend'] = daglig_trend2['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
+                st.line_chart(daglig_trend2[['Nedladdningar', 'Trend']])
             
             st.dataframe(df_surdeg.sort_values("Datum", ascending=False), use_container_width=True)
     else:
-        st.warning("Ingen aktivitet hittades för vald period.")
+        st.warning(t["no_data"])
