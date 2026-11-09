@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import time
 
 # --- Konfiguration ---
-st.set_page_config(page_title="Podcaster Metrix", page_icon="📈", layout="centered")
+st.set_page_config(page_title="Podcaster Social Media Metrix", page_icon="📈", layout="centered")
 
 PODCASTS = {
     664657: "Småbrukarpodden",
@@ -52,7 +52,7 @@ lang_choice = st.sidebar.radio("Språk / Language", ["Svenska", "English"])
 t = TRANSLATIONS[lang_choice]
 
 # --- UI och Inloggning ---
-st.title("🎙️ Podcaster Metrix")
+st.title("🎙️ Podcaster Social Media Metrix")
 st.write(t["desc"])
 
 # Hämta API-nyckel från Streamlits inbyggda hemligheter (secrets)
