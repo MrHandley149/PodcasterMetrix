@@ -14,7 +14,7 @@ PODCASTS = {
 BASE_URL = "https://www.buzzsprout.com/api"
 
 # --- UI och Inloggning ---
-st.title("🎙️ Lilltorp Podd-Metrik")
+st.title("🎙️ Podcaster Social Media Metrix")
 st.write("Dagsstatistik för Småbrukarpodden och Lilla Surdegspodden.")
 
 # Hämta API-nyckel från Streamlits inbyggda hemligheter (secrets)
