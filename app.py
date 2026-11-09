@@ -15,7 +15,7 @@ BASE_URL = "https://www.buzzsprout.com/api"
 
 # --- Språkhantering (Translations) ---
 TRANSLATIONS = {
-    # Skapar en textsträng av namnen i konstanten (t.ex. "Småbrukarpodden och Lilla Surdegspodden")
+# Skapar en textsträng av namnen i konstanten (t.ex. "Småbrukarpodden och Lilla Surdegspodden")
 podd_namn = list(PODCASTS.values())
 podd_str_sv = " och ".join(podd_namn)
 podd_str_en = " and ".join(podd_namn)
@@ -24,15 +24,6 @@ podd_str_en = " and ".join(podd_namn)
 TRANSLATIONS = {
     "Svenska": {
         "desc": f"Dagsstatistik för {podd_str_sv}.",
-        "api_input": "Mata in din Buzzsprout API-nyckel:",
-        # ... resten av dina svenska texter
-    },
-    "English": {
-        "desc": f"Daily statistics for {podd_str_en}.",
-        "api_input": "Enter your Buzzsprout API key:",
-        # ... resten av dina engelska texter
-    }
-}
         "api_input": "Mata in din Buzzsprout API-nyckel:",
         "days_slider": "Hur många dagar bakåt vill du titta?",
         "trend_slider": "Utjämning av trendkurva (dagar)",
@@ -44,7 +35,7 @@ TRANSLATIONS = {
         "unknown": "Okänt"
     },
     "English": {
-        "desc": "Daily statistics for Småbrukarpodden and Lilla Surdegspodden.",
+        "desc": f"Daily statistics for {podd_str_en}.",
         "api_input": "Enter your Buzzsprout API key:",
         "days_slider": "How many days back do you want to look?",
         "trend_slider": "Trend curve smoothing (days)",
@@ -56,7 +47,6 @@ TRANSLATIONS = {
         "unknown": "Unknown"
     }
 }
-
 # Sidofält för språkval
 st.sidebar.title("Inställningar / Settings")
 lang_choice = st.sidebar.radio("Språk / Language", ["Svenska", "English"])
