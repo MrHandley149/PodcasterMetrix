@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import time
 
 # --- Konfiguration ---
-st.set_page_config(page_title="Lilltorp Podd-Metrik", page_icon="📈", layout="centered")
+st.set_page_config(page_title="Podcaster Social Media Metrix", page_icon="📈", layout="centered")
 
 PODCASTS = {
     664657: "Småbrukarpodden",
