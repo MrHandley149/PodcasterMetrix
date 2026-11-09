@@ -95,7 +95,17 @@ if API_TOKEN and st.button("Hämta statistik"):
             df_surdeg = df[df["Podd"] == "Lilla Surdegspodden"]
             st.subheader("Totala nedladdningar per dag")
             daglig_trend = df_surdeg.groupby("Datum")["Nedladdningar"].sum().reset_index()
-            st.line_chart(daglig_trend.set_index("Datum"))
+            # --- NYTT: Slider och Trendkurva ---
+# Låter dig välja hur många dagar trenden ska beräknas på
+trend_window = st.slider("Utjämning av trendkurva (dagar)", min_value=1, max_value=30, value=7)
+
+# Skapar en ny kolumn med det glidande medelvärdet
+# OBS: Byt ut 'Nedladdningar' om din datakolumn heter något annat, t.ex. 'Total' eller 'Downloads'
+df['Trend'] = df['Nedladdningar'].rolling(window=trend_window, min_periods=1).mean()
+
+# Ritar ut både dagliga nedladdningar och trenden samtidigt
+st.line_chart(df[['Nedladdningar', 'Trend']])
+# -----------------------------------
             st.dataframe(df_surdeg.sort_values("Datum", ascending=False), use_container_width=True)
     else:
         st.warning("Ingen aktivitet hittades för vald period.")
