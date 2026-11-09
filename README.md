@@ -1,2 +1,2 @@
-# podd-metrik
-Podd metrics
+# podcaster-metrix
+Podcaster Social Media metrix
